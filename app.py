@@ -1,3 +1,5 @@
+import sys
+import subprocess
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -6,11 +8,37 @@ import plotly.graph_objects as go
 from sklearn.metrics import confusion_matrix
 import random
 
+# Check and install missing packages
+required_packages = {
+    'streamlit': '1.29.0',
+    'pandas': '2.1.0',
+    'numpy': '1.24.3',
+    'plotly': '5.15.0',
+    'scikit-learn': '1.3.0'
+}
+
+def install(package, version=None):
+    if version:
+        package += f'>={version}'
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+
+try:
+    for package, version in required_packages.items():
+        try:
+            __import__(package)
+        except ImportError:
+            install(package, version)
+except subprocess.CalledProcessError:
+    st.error("Failed to install required packages. Please check your internet connection.")
+    st.stop()
+
+# Rest of your existing code...
 # Page configuration
 st.set_page_config(
     page_title="ASTERIQX - Behavioral Scorecard Simulator",
     page_icon="📊",
     layout="wide"
+    initial_sidebar_state="expanded"
 )
 
 # ASTERIQX branding
