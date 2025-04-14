@@ -37,7 +37,7 @@ except subprocess.CalledProcessError:
 st.set_page_config(
     page_title="ASTERIQX - Behavioral Scorecard Simulator",
     page_icon="📊",
-    layout="wide"
+    layout="wide",
     initial_sidebar_state="expanded"
 )
 
