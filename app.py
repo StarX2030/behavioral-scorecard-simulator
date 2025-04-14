@@ -290,6 +290,83 @@ with col2:
     })
     st.table(metrics_df.style.hide(axis="index"))
 
+# Generate automated commentary
+st.header("Simulation Insights")
+
+# Commentary on approval rate
+if approval_rate > 0.7:
+    approval_comment = "High approval rate suggests a lenient credit policy, which may increase portfolio risk."
+elif approval_rate > 0.4:
+    approval_comment = "Moderate approval rate balances risk and opportunity appropriately."
+else:
+    approval_comment = "Conservative approval rate indicates tight credit standards, potentially missing opportunities."
+
+# Commentary on bad rate
+if bad_rate > 0.15:
+    bad_rate_comment = "⚠️ High bad rate indicates significant credit risk in approved applications. Consider tightening standards or reviewing scorecard weights."
+elif bad_rate > 0.08:
+    bad_rate_comment = "Moderate bad rate within typical expectations for this portfolio."
+else:
+    bad_rate_comment = "Low bad rate suggests effective risk management or potentially overly conservative approvals."
+
+# Commentary on risk distribution
+if len(approved_df) > 0:
+    high_risk_pct = risk_tier_dist.get('High Risk', 0)
+    if high_risk_pct > 0.3:
+        risk_dist_comment = f"High proportion ({high_risk_pct:.1%}) of approved applicants in High Risk tier warrants caution."
+    elif high_risk_pct > 0.15:
+        risk_dist_comment = f"Moderate High Risk exposure ({high_risk_pct:.1%}) - monitor performance closely."
+    else:
+        risk_dist_comment = f"Low High Risk exposure ({high_risk_pct:.1%}) indicates conservative risk positioning."
+else:
+    risk_dist_comment = "No approved applications to analyze risk distribution."
+
+# Commentary on score cutoff position
+score_mean = filtered_df['score'].mean()
+if cutoff_score > score_mean + 50:
+    cutoff_comment = f"Cutoff score ({cutoff_score}) is significantly above average ({score_mean:.1f}) - highly selective policy."
+elif cutoff_score > score_mean - 50:
+    cutoff_comment = f"Cutoff score ({cutoff_score}) aligns with average scores ({score_mean:.1f}) - balanced approach."
+else:
+    cutoff_comment = f"Cutoff score ({cutoff_score}) is below average ({score_mean:.1f}) - inclusive policy with higher risk."
+
+# Compile all commentary
+commentary = f"""
+### Approval Strategy Analysis
+- **Approval Rate**: {approval_comment}
+- **Bad Rate**: {bad_rate_comment}
+- **Cutoff Positioning**: {cutoff_comment}
+
+### Risk Composition
+- **Risk Distribution**: {risk_dist_comment}
+"""
+
+# Add behavioral flag impact if any flags are selected
+if missed_payment_flag or account_dormancy_flag or high_utilization_flag:
+    flag_count = sum([missed_payment_flag, account_dormancy_flag, high_utilization_flag])
+    commentary += f"""
+### Behavioral Flag Impact
+- Analyzing {flag_count} behavioral flag{'s' if flag_count > 1 else ''} shows specialized segment performance:
+  - Approval rate: {approval_rate:.1%} vs overall {df['score'].ge(cutoff_score).mean():.1%}
+  - Bad rate: {bad_rate:.1%} vs overall {df[df['score'] >= cutoff_score]['default'].mean():.1%}
+"""
+
+st.markdown(commentary)
+
+# Add recommendation based on analysis
+st.subheader("Recommendation")
+if bad_rate > 0.15 and approval_rate > 0.5:
+    rec = "🚨 Strongly consider increasing cutoff score or adjusting risk tier thresholds to reduce bad rate."
+elif bad_rate > 0.1 and approval_rate > 0.6:
+    rec = "Consider moderate tightening of credit standards or more aggressive pricing for higher risk tiers."
+elif bad_rate < 0.05 and approval_rate < 0.3:
+    rec = "Potential opportunity to safely expand approvals by slightly lowering cutoff score."
+else:
+    rec = "Current parameters appear balanced. Monitor performance for any shifts."
+
+st.info(rec)
+
+
 # Confusion matrix (hidden by default)
 with st.expander("Show Confusion Matrix"):
     y_true = filtered_df['default']
