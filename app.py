@@ -32,7 +32,15 @@ except subprocess.CalledProcessError:
     st.error("Failed to install required packages. Please check your internet connection.")
     st.stop()
 
-# Rest of your existing code...
+# Custom blue color theme
+BLUE_THEME = {
+    "primaryColor": "#1E3F66",
+    "backgroundColor": "#F0F5FF",
+    "secondaryBackgroundColor": "#E1EBFA",
+    "textColor": "#1E3F66",
+    "font": "sans serif"
+}
+
 # Page configuration
 st.set_page_config(
     page_title="ASTERIQX - Behavioral Scorecard Simulator",
@@ -41,13 +49,40 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ASTERIQX branding
+# Apply custom theme
+st.markdown(f"""
+    <style>
+        .css-1aumxhk {{
+            background-color: {BLUE_THEME["backgroundColor"]};
+        }}
+        .css-1v3fvcr {{
+            color: {BLUE_THEME["textColor"]};
+        }}
+        .st-b7 {{
+            color: {BLUE_THEME["textColor"]};
+        }}
+        .css-1cpxqw2 {{
+            background-color: {BLUE_THEME["primaryColor"]};
+        }}
+        .css-1q8dd3e {{
+            background-color: {BLUE_THEME["primaryColor"]};
+        }}
+        .css-1q8dd3e:hover {{
+            background-color: #2A5D8A;
+        }}
+        .css-1v0mbdj {{
+            border: 1px solid {BLUE_THEME["primaryColor"]};
+        }}
+    </style>
+""", unsafe_allow_html=True)
+
+# ASTERIQX branding with blue theme
 def add_logo():
     st.markdown(
         """
         <style>
             [data-testid="stSidebarNav"] {
-                background-image: url(https://placehold.co/100x40?text=ASTERIQX&font=roboto);
+                background-image: url(https://placehold.co/100x40/1E3F66/FFFFFF?text=ASTERIQX&font=roboto);
                 background-repeat: no-repeat;
                 background-position: 20px 20px;
                 background-size: 100px 40px;
@@ -105,9 +140,39 @@ def generate_data(num_samples=10000):
 # Load or generate data
 df = generate_data()
 
+# Main content with usage instructions
+st.title("📊 ASTERIQX Behavioral Scorecard Simulator")
+
+with st.expander("ℹ️ How to Use This Tool", expanded=True):
+    st.markdown("""
+    **Welcome to the ASTERIQX Behavioral Scorecard Simulator**  
+    This interactive tool helps you analyze the impact of credit scoring decisions on your portfolio.  
+    
+    ### Usage Instructions:
+    1. **Adjust Parameters** in the sidebar to simulate different scenarios:
+       - Filter by age group and income range
+       - Select behavioral flags to analyze specific risk segments
+       - Set your desired cutoff score
+       - Define risk tier thresholds
+    
+    2. **View Results** in real-time:
+       - Key metrics (approval rate, bad rate) update automatically
+       - Interactive charts show score distributions and risk composition
+       - Automated insights provide expert analysis of your scenario
+    
+    3. **Optimize Your Strategy**:
+       - Experiment with different cutoff scores to balance risk/reward
+       - Identify sensitive thresholds where small changes have big impacts
+       - Use the insights to inform your credit policies
+    
+    *Pro Tip: Start with conservative settings, then gradually relax criteria while monitoring the bad rate.*
+    """)
+
+st.markdown("---")
+
 # Sidebar for input parameters
 with st.sidebar:
-    st.header("Input Parameters")
+    st.header("⚙️ Simulation Parameters")
     
     # Age filter
     age_options = ['All'] + sorted(df['age'].unique().tolist())
@@ -123,7 +188,7 @@ with st.sidebar:
     )
     
     # Behavioral flags
-    st.markdown("**Behavioral Flags**")
+    st.markdown("**🚩 Behavioral Flags**")
     missed_payment_flag = st.checkbox("Missed Payment", value=False)
     account_dormancy_flag = st.checkbox("Account Dormancy", value=False)
     high_utilization_flag = st.checkbox("High Credit Utilization", value=False)
@@ -138,7 +203,7 @@ with st.sidebar:
     )
     
     # Risk tier thresholds
-    st.markdown("**Risk Tier Thresholds**")
+    st.markdown("**📊 Risk Tier Thresholds**")
     col1, col2 = st.columns(2)
     with col1:
         low_med = st.number_input("Low-Medium", value=600, min_value=300, max_value=900)
@@ -186,29 +251,29 @@ bad_rate = filtered_df[filtered_df['approved']]['default'].mean()
 approved_df = filtered_df[filtered_df['approved']]
 risk_tier_dist = approved_df['risk_tier'].value_counts(normalize=True).sort_index()
 
-# Main content
-st.title("Behavioral Scorecard Simulator")
-st.markdown("""
-    *Simulate different credit scorecard cutoffs and observe their impact on portfolio metrics.*
-""")
-
-# Key metrics
+# Key metrics with blue styling
+st.header("📈 Portfolio Metrics")
 col1, col2, col3 = st.columns(3)
-col1.metric("Approval Rate", f"{approval_rate:.1%}")
-col2.metric("Bad Rate", f"{bad_rate:.1%}")
-col3.metric("Approved Applicants", f"{len(approved_df):,}")
+col1.metric("Approval Rate", f"{approval_rate:.1%}", 
+           help="Percentage of applicants who would be approved")
+col2.metric("Bad Rate", f"{bad_rate:.1%}", 
+           delta_color="inverse",
+           help="Percentage of approved applicants who would default")
+col3.metric("Approved Applicants", f"{len(approved_df):,}", 
+           help="Total number of applicants who would be approved")
 
 st.markdown("---")
 
-# Charts
-st.header("Simulation Results")
+# Charts section
+st.header("📊 Simulation Results")
 
 # Approval/Rejection pie chart
 fig1 = px.pie(
     filtered_df,
     names=filtered_df['approved'].map({True: 'Approved', False: 'Rejected'}),
     title='Approval/Rejection Distribution',
-    hole=0.4
+    hole=0.4,
+    color_discrete_sequence=['#1E3F66', '#4A90E2']
 )
 fig1.update_traces(textposition='inside', textinfo='percent+label')
 
@@ -220,7 +285,8 @@ fig2 = px.bar(
     y='default',
     title='Bad Rate by Risk Tier',
     labels={'default': 'Bad Rate', 'risk_tier': 'Risk Tier'},
-    text_auto='.1%'
+    text_auto='.1%',
+    color_discrete_sequence=['#1E3F66']
 )
 fig2.update_layout(yaxis_tickformat=".0%")
 
@@ -229,17 +295,17 @@ fig3 = go.Figure()
 fig3.add_trace(go.Histogram(
     x=filtered_df['score'],
     name='All Applicants',
-    marker_color='lightgray'
+    marker_color='#E1EBFA'
 ))
 fig3.add_trace(go.Histogram(
     x=approved_df['score'],
     name='Approved Applicants',
-    marker_color='green'
+    marker_color='#1E3F66'
 ))
 fig3.add_vline(
     x=cutoff_score,
     line_dash="dash",
-    line_color="red",
+    line_color="#FF4B4B",
     annotation_text=f"Cutoff: {cutoff_score}",
     annotation_position="top"
 )
@@ -258,7 +324,7 @@ col2.plotly_chart(fig2, use_container_width=True)
 st.plotly_chart(fig3, use_container_width=True)
 
 # Risk tier distribution
-st.header("Portfolio Overview")
+st.header("🔍 Portfolio Overview")
 
 col1, col2 = st.columns(2)
 
@@ -268,7 +334,8 @@ with col1:
         approved_df,
         names='risk_tier',
         title='Approved Applicants by Risk Tier',
-        hole=0.4
+        hole=0.4,
+        color_discrete_sequence=['#1E3F66', '#4A90E2', '#7FB3FF']
     )
     st.plotly_chart(fig4, use_container_width=True)
 
@@ -288,10 +355,13 @@ with col2:
             f"{filtered_df[~filtered_df['approved']]['score'].mean():.1f}"
         ]
     })
-    st.table(metrics_df.style.hide(axis="index"))
+    st.dataframe(metrics_df.style
+                .set_properties(**{'background-color': '#F0F5FF', 'color': '#1E3F66'})
+                .hide(axis="index"),
+                use_container_width=True)
 
 # Generate automated commentary
-st.header("Simulation Insights")
+st.header("💡 Simulation Insights")
 
 # Commentary on approval rate
 if approval_rate > 0.7:
@@ -354,7 +424,7 @@ if missed_payment_flag or account_dormancy_flag or high_utilization_flag:
 st.markdown(commentary)
 
 # Add recommendation based on analysis
-st.subheader("Recommendation")
+st.subheader("📌 Recommendation")
 if bad_rate > 0.15 and approval_rate > 0.5:
     rec = "🚨 Strongly consider increasing cutoff score or adjusting risk tier thresholds to reduce bad rate."
 elif bad_rate > 0.1 and approval_rate > 0.6:
@@ -366,9 +436,8 @@ else:
 
 st.info(rec)
 
-
 # Confusion matrix (hidden by default)
-with st.expander("Show Confusion Matrix"):
+with st.expander("🔎 Show Confusion Matrix"):
     y_true = filtered_df['default']
     y_pred = filtered_df['approved']
     cm = confusion_matrix(y_true, y_pred)
@@ -378,7 +447,8 @@ with st.expander("Show Confusion Matrix"):
         x=['Rejected', 'Approved'],
         y=['Non-Default', 'Default'],
         text_auto=True,
-        aspect="auto"
+        aspect="auto",
+        color_continuous_scale='Blues'
     )
     fig_cm.update_layout(title="Confusion Matrix (Default Prediction)")
     st.plotly_chart(fig_cm, use_container_width=True)
@@ -386,7 +456,7 @@ with st.expander("Show Confusion Matrix"):
 # Footer
 st.markdown("---")
 st.markdown("""
-    <div style='text-align: center; color: gray;'>
+    <div style='text-align: center; color: #1E3F66;'>
         <p>ASTERIQX Behavioral Scorecard Simulator | Confidential</p>
     </div>
 """, unsafe_allow_html=True)
