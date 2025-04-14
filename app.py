@@ -2,14 +2,15 @@ import os
 import streamlit as st
 import sys
 import subprocess
-import pkg_resources
+import importlib.metadata as metadata  # Modern replacement for pkg_resources
+from importlib.util import find_spec
 from modules.data_loader import load_data, process_data
 from modules.simulations import run_simulation
 from modules.analytics import (
     display_score_distribution,
     plot_tradeoff_curves,
     generate_report,
-    generate_auto_commentary  # New import
+    generate_auto_commentary
 )
 from modules.ai_recommender import generate_recommendations
 from modules.optimizer import optimize_cutoffs
