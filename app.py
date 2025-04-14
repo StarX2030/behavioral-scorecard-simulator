@@ -1,3 +1,4 @@
+import os
 import streamlit as st
 import sys
 import subprocess
@@ -15,12 +16,26 @@ from utils.helpers import save_session, load_session
 import os
 # Check and install missing packages
 required = {
-    'streamlit': '1.29.0',
-    'pandas': '1.5.3',
-    'numpy': '1.23.5',
-    'plotly': '5.13.0',
-    'scikit-learn': '1.2.2'
+  'streamlit': '1.32.2',
+        'pandas': '2.1.4',
+        'numpy': '1.26.2',
+        'plotly': '5.18.0',
+        'scikit-learn': '1.3.2'
 }
+for pkg, ver in requirements.items():
+        try:
+            __import__(pkg)
+        except ImportError:
+            print(f"Installing {pkg}...", file=sys.stderr)
+            subprocess.check_call([
+                sys.executable, 
+                "-m", 
+                "pip", 
+                "install", 
+                f"{pkg}=={ver}"
+            ])
+
+ensure_packages()
 
 def install_missing():
     installed = {pkg.key for pkg in pkg_resources.working_set}
