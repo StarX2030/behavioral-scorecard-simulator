@@ -1,4 +1,7 @@
 import streamlit as st
+import sys
+import subprocess
+import pkg_resources
 from modules.data_loader import load_data, process_data
 from modules.simulations import run_simulation
 from modules.analytics import (
@@ -10,6 +13,33 @@ from modules.ai_recommender import generate_recommendations
 from modules.optimizer import optimize_cutoffs
 from utils.helpers import save_session, load_session
 import os
+# Check and install missing packages
+required = {
+    'streamlit': '1.29.0',
+    'pandas': '1.5.3',
+    'numpy': '1.23.5',
+    'plotly': '5.13.0',
+    'scikit-learn': '1.2.2'
+}
+
+def install_missing():
+    installed = {pkg.key for pkg in pkg_resources.working_set}
+    missing = required.keys() - installed
+    
+    if missing:
+        python = sys.executable
+        for package in missing:
+            try:
+                st.warning(f"Installing {package}...")
+                subprocess.check_call([python, '-m', 'pip', 'install', 
+                                     f"{package}=={required[package]}"], 
+                                    stdout=subprocess.DEVNULL)
+                st.success(f"Successfully installed {package}")
+            except subprocess.CalledProcessError:
+                st.error(f"Failed to install {package}")
+                st.stop()
+
+install_missing()
 
 # App configuration
 st.set_page_config(
