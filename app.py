@@ -17,39 +17,44 @@ from utils.helpers import save_session, load_session
 import pandas as pd
 import numpy as np
 
-# Enhanced package management
-REQUIRED_PACKAGES = {
-    'streamlit': '1.32.2',
-    'pandas': '2.1.4',
-    'numpy': '1.26.2',
-    'plotly': '5.18.0',
-    'scikit-learn': '1.3.2',
-    'openpyxl': '3.1.2',  # For Excel support
-    'fpdf': '1.7.2'       # For PDF reports
-}
-
 def install_missing_packages():
-    """Install missing packages with version control"""
-    installed = {pkg.key for pkg in pkg_resources.working_set}
-    missing = REQUIRED_PACKAGES.keys() - installed
+    """Modern Python package installation checker"""
+    REQUIRED_PACKAGES = {
+        'streamlit': '1.32.2',
+        'pandas': '2.1.4',
+        'numpy': '1.26.2',
+        'plotly': '5.18.0',
+        'scikit-learn': '1.3.2',
+        'openpyxl': '3.1.2',
+        'fpdf': '1.7.2'
+    }
+    
+    # Get installed packages using importlib.metadata
+    installed_packages = {dist.metadata['Name'].lower() 
+                         for dist in metadata.distributions()}
+    
+    # Find missing packages
+    missing = {pkg for pkg in REQUIRED_PACKAGES 
+               if pkg.lower() not in installed_packages}
     
     if missing:
-        python = sys.executable
-        for package in missing:
+        st.warning(f"Missing packages: {', '.join(missing)}")
+        for pkg in missing:
             try:
-                st.warning(f"Installing {package}...")
+                st.info(f"Installing {pkg}...")
                 subprocess.check_call(
-                    [python, '-m', 'pip', 'install', 
-                     f"{package}=={REQUIRED_PACKAGES[package]}"],
-                    stdout=subprocess.DEVNULL
+                    [sys.executable, '-m', 'pip', 'install', 
+                     f"{pkg}=={REQUIRED_PACKAGES[pkg]}"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
                 )
-                st.success(f"Successfully installed {package}")
-            except subprocess.CalledProcessError as e:
-                st.error(f"Failed to install {package}: {str(e)}")
+                st.success(f"✓ {pkg} installed")
+            except subprocess.CalledProcessError:
+                st.error(f"Failed to install {pkg}")
                 st.stop()
 
+# Initialize the app
 install_missing_packages()
-
 # App configuration
 st.set_page_config(
     page_title="Behavioral Scorecard Simulator PRO",
